@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>HP Sera</title>
+<style>
+  :root{
+    --ink:#fff;
+    --ink-dim:rgba(255,255,255,.62);
+    --glass:rgba(255,255,255,.16);
+    --glass-strong:rgba(255,255,255,.28);
+    --notif:rgba(60,58,80,.55);
+    --danger:#ff453a;
+    --ease:cubic-bezier(.2,.8,.2,1);
+    --key:75px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;background:#000;color:var(--ink);overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  svg{display:block}
+
+  /* ===== Bingkai iPhone ===== */
+  .stage{height:100%;display:flex;align-items:center;justify-content:center;background:#08080c}
+  .phone{position:relative;width:100%;height:100%;overflow:hidden;background:#000}
+  @media (min-width:600px){
+    .phone{width:393px;height:852px;max-height:96vh;border-radius:56px;
+      box-shadow:0 0 0 3px #3a3a42,0 0 0 11px #0c0c10,0 0 0 13px #2a2a32,0 40px 90px rgba(0,0,0,.75)}
+  }
+  @media (max-height:700px){ :root{--key:62px} }
+
+  /* ===== Wallpaper ===== */
+  .wall{position:absolute;inset:0;
+    background:
+      radial-gradient(70% 45% at 20% 12%,#5a3fd0 0%,transparent 65%),
+      radial-gradient(80% 50% at 85% 85%,#c4457a 0%,transparent 65%),
+      radial-gradient(60% 40% at 10% 90%,#2a6bd8 0%,transparent 70%),
+      #14102e}
+
+  /* ===== Dynamic Island & Status bar ===== */
+  .island{display:none;position:absolute;top:11px;left:50%;transform:translateX(-50%);
+    width:124px;height:36px;border-radius:20px;background:#000;z-index:60}
+  @media (min-width:600px){ .island{display:block} }
+  .statusbar{position:absolute;top:0;left:0;right:0;height:54px;z-index:55;pointer-events:none;
+    display:flex;justify-content:space-between;align-items:center;padding:14px 30px 0 44px;
+    font-size:17px;font-weight:600;letter-spacing:-.2px}
+  .statusbar .r{display:flex;align-items:center;gap:6px;font-size:15px}
+  .statusbar .r b{font-size:14px;font-weight:600}
+
+  .screen{position:absolute;inset:0}
+  .home-ind{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:138px;height:5px;
+    border-radius:3px;background:#fff;z-index:58;pointer-events:none;opacity:.95}
+
+  /* ===== Ikon aplikasi ===== */
+  .ico{border-radius:22.5%;overflow:hidden;flex:none}
+
+  /* ===== Lockscreen ===== */
+  #lock{z-index:30;touch-action:none;user-select:none;
+    transition:transform .65s var(--ease),opacity .45s}
+  #lock.unlocked{transform:translateY(-100%);opacity:0;pointer-events:none}
+  #lock .wall{filter:saturate(1.05)}
+  #lock::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.18);pointer-events:none;
+    transition:background .5s}
+  #lock.pin-mode::after{background:rgba(0,0,0,.45);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px)}
+
+  .lock-main{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;cursor:pointer;
+    transition:opacity .35s,transform .45s var(--ease)}
+  #lock.pin-mode .lock-main{opacity:0;transform:scale(.94);pointer-events:none}
+
+  .lock-date{margin-top:72px;font-size:21px;font-weight:600;color:rgba(255,255,255,.78);letter-spacing:-.2px}
+  .lock-time{font-size:100px;font-weight:700;line-height:1;letter-spacing:-3px;margin-top:-2px;
+    color:rgba(255,255,255,.9);font-feature-settings:"tnum"}
+
+  .notifs{width:100%;padding:0 12px;margin-top:34px;display:flex;flex-direction:column;gap:8px}
+  .notif{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:22px;
+    background:var(--notif);backdrop-filter:blur(30px) saturate(1.6);-webkit-backdrop-filter:blur(30px) saturate(1.6);
+    opacity:0;transform:translateY(16px) scale(.97);animation:rise .6s var(--ease) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .notif .ico{width:38px;height:38px}
+  .notif .tx{flex:1;min-width:0}
+  .notif .hd{display:flex;justify-content:space-between;gap:8px}
+  .notif .who{font-weight:600;font-size:15px}
+  .notif .when{font-size:13px;color:var(--ink-dim)}
+  .notif .msg{font-size:15px;line-height:1.3;color:rgba(255,255,255,.92);margin-top:1px}
+
+  .lock-btns{position:absolute;left:0;right:0;bottom:50px;display:flex;justify-content:space-between;padding:0 46px;z-index:3}
+  .lbtn{width:50px;height:50px;border-radius:50%;background:rgba(60,60,70,.45);
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center;
+    transition:transform .15s,background .15s}
+  .lbtn:active{transform:scale(.9);background:rgba(255,255,255,.35)}
+  .swipe-hint{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:13px;color:var(--ink-dim);
+    z-index:3;pointer-events:none;animation:pulse 2.4s infinite}
+  @keyframes pulse{50%{opacity:.4}}
+  #lock.pin-mode .lock-btns,#lock.pin-mode .swipe-hint{opacity:0;pointer-events:none}
+
+  /* ===== Layar kode sandi ===== */
+  .pin{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;
+    padding-top:78px;opacity:0;pointer-events:none;transform:translateY(24px);
+    transition:opacity .4s .08s,transform .45s var(--ease) .08s}
+  #lock.pin-mode .pin{opacity:1;pointer-events:auto;transform:none}
+  .pin-title{font-size:19px;font-weight:500;margin-top:14px}
+  .riddle{margin:12px 34px 0;text-align:center;font-size:15px;line-height:1.45;color:rgba(255,255,255,.85);font-style:italic}
+  .riddle small{display:block;font-style:normal;font-size:12px;letter-spacing:.5px;text-transform:uppercase;
+    color:var(--ink-dim);margin-bottom:4px}
+  .riddle-extra{margin:8px 34px 0;text-align:center;font-size:13px;color:#ffd479;min-height:18px}
+
+  .dots{display:flex;gap:18px;margin-top:20px}
+  .dot{width:13px;height:13px;border-radius:50%;border:1.5px solid #fff;transition:background .12s}
+  .dot.on{background:#fff}
+  .dots.shake{animation:shake .45s}
+  @keyframes shake{20%,60%{transform:translateX(-12px)}40%,80%{transform:translateX(12px)}}
+  .pin-msg{height:18px;margin-top:10px;font-size:13px;color:#ffb3ad}
+
+  .keypad{margin-top:14px;display:grid;grid-template-columns:repeat(3,var(--key));gap:14px 20px}
+  .key{width:var(--key);height:var(--key);border-radius:50%;background:var(--glass);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;transition:background .08s}
+  .key:active,.key.tap{background:var(--glass-strong)}
+  .key .n{font-size:34px;font-weight:300;line-height:1}
+  .key .l{font-size:10px;font-weight:600;letter-spacing:2px;margin-top:1px;height:11px;color:rgba(255,255,255,.9)}
+  .key.empty{visibility:hidden}
+  .pin-foot{width:calc(var(--key)*3 + 40px);display:flex;justify-content:space-between;margin-top:18px;font-size:16px}
+  .pin-foot button{padding:8px 4px}
+
+  /* ===== Home screen ===== */
+  #home{z-index:10;padding:68px 20px 0}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px 0;justify-items:center}
+  .app{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;font-size:11.5px;
+    text-shadow:0 1px 3px rgba(0,0,0,.35)}
+  .app .ico{width:60px;height:60px;box-shadow:0 2px 8px rgba(0,0,0,.25);transition:transform .15s,filter .3s}
+  .app:active .ico{transform:scale(.9)}
+  .app.locked .ico{filter:grayscale(.85) brightness(.55)}
+  .app .lockmark{display:none;position:absolute;top:19px;left:50%;transform:translateX(-50%);
+    width:22px;height:22px;align-items:center;justify-content:center}
+  .app.locked .lockmark{display:flex}
+  .badge{position:absolute;top:-6px;right:-2px;min-width:22px;height:22px;border-radius:11px;background:#ff3b30;
+    font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;padding:0 6px;
+    box-shadow:0 0 0 0 transparent;text-shadow:none}
+
+  .search{position:absolute;left:50%;transform:translateX(-50%);bottom:124px;display:flex;align-items:center;gap:6px;
+    padding:7px 22px;border-radius:18px;background:rgba(255,255,255,.2);
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);font-size:13px}
+  .dock{position:absolute;left:11px;right:11px;bottom:20px;height:92px;border-radius:36px;
+    background:rgba(255,255,255,.2);backdrop-filter:blur(30px) saturate(1.5);-webkit-backdrop-filter:blur(30px) saturate(1.5);
+    display:flex;justify-content:space-around;align-items:center;padding:0 8px}
+  .dock .app .ico{width:60px;height:60px}
+
+  /* ===== Toast ===== */
+  .toast{position:absolute;left:50%;top:62px;transform:translate(-50%,-14px);z-index:70;
+    background:rgba(40,38,58,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    padding:10px 18px;border-radius:20px;font-size:14px;opacity:0;pointer-events:none;
+    transition:opacity .25s,transform .3s var(--ease);text-align:center;max-width:82%}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone" id="phone">
+
+    <div class="island"></div>
+    <div class="statusbar">
+      <span id="sb-time"></span>
+      <span class="r">
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="#fff"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+        <b>5G</b>
+        <svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="22" height="12" rx="3.5" fill="none" stroke="#fff" opacity=".4"/><rect x="2" y="2" width="16" height="9" rx="2.2" fill="#fff"/><path d="M24.5 4.5v4c.8-.3 1.5-1.1 1.5-2s-.7-1.7-1.5-2z" fill="#fff" opacity=".45"/></svg>
+      </span>
+    </div>
+
+    <!-- HOME -->
+    <section class="screen" id="home" aria-label="Home screen">
+      <div class="wall"></div>
+      <div class="grid" id="grid" style="position:relative"></div>
+      <div class="search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6"/></svg>Cari</div>
+      <div class="dock" id="dock"></div>
+    </section>
+
+    <!-- LOCKSCREEN + KODE SANDI -->
+    <section class="screen" id="lock" aria-label="Lockscreen">
+      <div class="wall"></div>
+
+      <div class="lock-main" id="lock-main">
+        <div class="lock-date" id="lock-date"></div>
+        <div class="lock-time" id="lock-time"></div>
+        <div class="notifs" id="notifs"></div>
+      </div>
+
+      <div class="lock-btns">
+        <button class="lbtn" id="btn-flash" aria-label="Senter">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M8 2h8v4l-1.5 2.2v1.3h-5V8.2L8 6zM9.5 11h5v10a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2z"/></svg>
+        </button>
+        <button class="lbtn" id="btn-cam" aria-label="Kamera">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.8"/></svg>
+        </button>
+      </div>
+      <div class="swipe-hint">Geser ke atas untuk membuka</div>
+
+      <div class="pin" id="pin">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5" fill="#fff"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        <div class="pin-title">Masukkan Kode Sandi</div>
+        <p class="riddle"><small>Dari Sera</small><span id="riddle"></span></p>
+        <p class="riddle-extra" id="riddle-extra"></p>
+        <div class="dots" id="dots"></div>
+        <div class="pin-msg" id="pin-msg"></div>
+        <div class="keypad" id="keypad"></div>
+        <div class="pin-foot">
+          <button id="pin-emerg">Darurat</button>
+          <button id="pin-cancel">Batal</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="home-ind"></div>
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   CONFIG — ubah bagian ini untuk menyesuaikan ceritamu
+   (nanti dipindah penuh ke story.json)
+   ========================================================= */
+const CONFIG = {
+  time: "07:42",
+  date: "Kamis, 22 Oktober",
+
+  lockNotifications: [
+    { app: "pesan",   who: "Sera",      msg: "Kalau aku telat, buka aja. Sandinya kamu pasti tahu.", when: "semalam",   delay: 400 },
+    { app: "catatan", who: "Pengingat", msg: "Jangan lupa. Aku nunggu.",                              when: "5 mnt lalu", delay: 1100 }
+  ],
+
+  pin: {
+    code: "2709",
+    riddle: "Tanggal pertama kali kita bertemu.",
+    extraHints: [
+      { after: 2, text: "Petunjuk: empat angka, tanggal lalu bulan." },
+      { after: 4, text: "Petunjuk: tanggalnya dua digit, bulannya September." }
+    ]
+  },
+
+  apps: [
+    { id: "pesan",   name: "Pesan",   locked: false, badge: 2 },
+    { id: "galeri",  name: "Foto",    locked: true },
+    { id: "catatan", name: "Catatan", locked: true },
+    { id: "musik",   name: "Musik",   locked: true },
+    { id: "peta",    name: "Peta",    locked: true }
+  ],
+  dock: [
+    { id: "telepon",    name: "Telepon",    dead: true },
+    { id: "safari",     name: "Safari",     dead: true },
+    { id: "kamera",     name: "Kamera",     dead: true },
+    { id: "pengaturan", name: "Pengaturan", dead: true }
+  ]
+};
+
+/* =========================================================
+   Ikon bergaya iOS (SVG)
+   ========================================================= */
+const ICONS = {
+  pesan: `<svg viewBox="0 0 60 60"><defs><linearGradient id="gp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#67f07f"/><stop offset="1" stop-color="#0db83e"/></linearGradient></defs><rect width="60" height="60" fill="url(#gp)"/><ellipse cx="30" cy="28" rx="17" ry="14" fill="#fff"/><path d="M17 40c-.5 4-3 7-6 8.5 6 .5 11-1.5 14-4.5z" fill="#fff"/></svg>`,
+  galeri: `<svg viewBox="0 0 60 60"><rect width="60" height="60" fill="#fff"/><g transform="translate(30 30)" style="mix-blend-mode:multiply"><ellipse cy="-10" rx="6" ry="10" fill="#ffd23c" transform="rotate(0)"/><ellipse cy="-10" rx="6" ry="10" fill="#ff9f2e" transform="rotate(45)"/><ellipse cy="-10" rx="6" ry="10" fill="#ff5a5a" transform="rotate(90)"/><ellipse cy="-10" rx="6" ry="10" fill="#e84fa8" transform="rotate(135)"/><ellipse cy="-10" rx="6" ry="10" fill="#a45cf0" transform="rotate(180)"/><ellipse cy="-10" rx="6" ry="10" fill="#4f8bff" transform="rotate(225)"/><ellipse cy="-10" rx="6" ry="10" fill="#34c9d8" transform="rotate(270)"/><ellipse cy="-10" rx="6" ry="10" fill="#5fd35f" transform="rotate(315)"/></g></svg>`,
+  catatan: `<svg viewBox="0 0 60 60"><rect width="60" height="60" fill="#fff"/><rect width="60" height="17" fill="#ffd60a"/><g stroke="#d5d5da" stroke-width="1.5"><path d="M0 28h60M0 38h60M0 48h60"/></g><path d="M12 8h22" stroke="#b08a00" stroke-width="2" stroke-linecap="round" opacity=".5"/></svg>`,
+  musik: `<svg viewBox="0 0 60 60"><defs><linearGradient id="gm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6a85"/><stop offset="1" stop-color="#f6213a"/></linearGradient></defs><rect width="60" height="60" fill="url(#gm)"/><path d="M24 40V20l17-4v20" stroke="#fff" stroke-width="3.2" fill="none" stroke-linejoin="round"/><ellipse cx="20.5" cy="41" rx="5.5" ry="4.2" fill="#fff"/><ellipse cx="37.5" cy="37" rx="5.5" ry="4.2" fill="#fff"/></svg>`,
+  peta: `<svg viewBox="0 0 60 60"><rect width="60" height="60" fill="#8fd7a0"/><path d="M0 0h60v26L0 40z" fill="#9bd8ff"/><path d="M-4 52L64 18" stroke="#fff" stroke-width="7"/><path d="M14 60l14-60" stroke="#fff" stroke-width="3" opacity=".8"/><path d="M30 14c-6 0-10 4.4-10 9.6C20 30 30 40 30 40s10-10 10-16.4C40 18.4 36 14 30 14z" fill="#ff3b30"/><circle cx="30" cy="23.5" r="3.6" fill="#fff"/></svg>`,
+  telepon: `<svg viewBox="0 0 60 60"><defs><linearGradient id="gt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#67f07f"/><stop offset="1" stop-color="#0db83e"/></linearGradient></defs><rect width="60" height="60" fill="url(#gt)"/><path d="M21 16c-3 1.5-4 4-3 8 3 10 11 18 22 22 4 1.4 6.5-.5 7-3l-1-4-7-2.5-3 3.5c-4-2-7.5-5.5-9.5-9.5l3.5-3-2.5-7z" fill="#fff"/></svg>`,
+  safari: `<svg viewBox="0 0 60 60"><defs><linearGradient id="gs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ac8ff"/><stop offset="1" stop-color="#1a6dff"/></linearGradient></defs><rect width="60" height="60" fill="url(#gs)"/><circle cx="30" cy="30" r="21" fill="none" stroke="#fff" stroke-width="2.5"/><path d="M40 20L33 33 20 40l7-13z" fill="#ff3b30"/><path d="M40 20L33 33 27 27z" fill="#fff"/></svg>`,
+  kamera: `<svg viewBox="0 0 60 60"><defs><linearGradient id="gk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9b9c2"/><stop offset="1" stop-color="#6c6c76"/></linearGradient></defs><rect width="60" height="60" fill="url(#gk)"/><path d="M12 22a4 4 0 0 1 4-4h4l3-4h14l3 4h4a4 4 0 0 1 4 4v18a4 4 0 0 1-4 4H16a4 4 0 0 1-4-4z" fill="#fff" opacity=".95"/><circle cx="30" cy="31" r="8.5" fill="#55555f"/><circle cx="30" cy="31" r="5" fill="#2a2a32"/></svg>`,
+  pengaturan: `<svg viewBox="0 0 60 60"><defs><linearGradient id="gg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9b9c2"/><stop offset="1" stop-color="#6c6c76"/></linearGradient></defs><rect width="60" height="60" fill="url(#gg)"/><circle cx="30" cy="30" r="15.5" fill="none" stroke="#fff" stroke-width="7" stroke-dasharray="6.1 6.1"/><circle cx="30" cy="30" r="12" fill="#e8e8ee"/><circle cx="30" cy="30" r="5.5" fill="#7a7a84"/></svg>`
+};
+const iconEl = (id,size)=>{
+  const d = document.createElement("div");
+  d.className = "ico"; d.innerHTML = ICONS[id] || "";
+  if(size){ d.style.width = d.style.height = size+"px"; }
+  return d;
+};
+
+/* =========================================================
+   Util
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const lock = $("lock");
+
+function toast(text){
+  const t = $("toast");
+  t.textContent = text;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>t.classList.remove("show"), 2300);
+}
+function buzz(p){ if(navigator.vibrate) navigator.vibrate(p); }
+
+/* =========================================================
+   Isi tampilan awal
+   ========================================================= */
+$("sb-time").textContent   = CONFIG.time;
+$("lock-time").textContent = CONFIG.time;
+$("lock-date").textContent = CONFIG.date;
+$("riddle").textContent    = "“" + CONFIG.pin.riddle + "”";
+
+const APP_NAMES = Object.fromEntries([...CONFIG.apps,...CONFIG.dock].map(a=>[a.id,a.name]));
+CONFIG.lockNotifications.forEach(n=>{
+  const el = document.createElement("div");
+  el.className = "notif";
+  el.style.animationDelay = n.delay + "ms";
+  el.appendChild(iconEl(n.app));
+  const tx = document.createElement("div");
+  tx.className = "tx";
+  tx.innerHTML = `<div class="hd"><span class="who">${n.who}</span><span class="when">${n.when}</span></div>
+                  <div class="msg">${n.msg}</div>`;
+  el.appendChild(tx);
+  $("notifs").appendChild(el);
+});
+
+$("btn-flash").addEventListener("click", e=>{ e.stopPropagation(); toast("Senter tidak tersedia"); });
+$("btn-cam").addEventListener("click",   e=>{ e.stopPropagation(); toast("Kamera tidak tersedia"); });
+
+/* =========================================================
+   Lockscreen -> kode sandi
+   ========================================================= */
+let startY = null;
+const inPin = () => lock.classList.contains("pin-mode");
+function enterPin(){ if(!inPin()) lock.classList.add("pin-mode"); }
+function leavePin(){ lock.classList.remove("pin-mode"); clearEntry(); }
+
+$("lock-main").addEventListener("click", enterPin);
+lock.addEventListener("pointerdown", e => startY = e.clientY);
+lock.addEventListener("pointerup", e => {
+  if(startY !== null && startY - e.clientY > 60 && !inPin()) enterPin();
+  startY = null;
+});
+$("pin-emerg").addEventListener("click", ()=>toast("Panggilan darurat tidak tersedia di sini"));
+$("pin-cancel").addEventListener("click", ()=>{ entry.length ? del() : leavePin(); });
+
+/* =========================================================
+   Papan angka
+   ========================================================= */
+const LEN = CONFIG.pin.code.length;
+let entry = "", wrongCount = 0, busy = false;
+
+for(let i=0;i<LEN;i++){ const d=document.createElement("div"); d.className="dot"; $("dots").appendChild(d); }
+
+const LETTERS = {2:"ABC",3:"DEF",4:"GHI",5:"JKL",6:"MNO",7:"PQRS",8:"TUV",9:"WXYZ"};
+["1","2","3","4","5","6","7","8","9","","0",""].forEach(k=>{
+  const b = document.createElement("button");
+  if(k===""){ b.className="key empty"; b.disabled=true; }
+  else{
+    b.className="key"; b.dataset.k=k;
+    b.innerHTML = `<span class="n">${k}</span><span class="l">${LETTERS[k]||""}</span>`;
+  }
+  $("keypad").appendChild(b);
+});
+$("keypad").addEventListener("click", e=>{
+  const k = e.target.closest("button")?.dataset.k;
+  if(k) press(k);
+});
+document.addEventListener("keydown", e=>{
+  if(!inPin() || lock.classList.contains("unlocked")) return;
+  if(/^\d$/.test(e.key)) press(e.key);
+  else if(e.key==="Backspace") del();
+  else if(e.key==="Escape") leavePin();
+});
+
+function renderDots(){
+  [...$("dots").children].forEach((d,i)=>d.classList.toggle("on", i<entry.length));
+  $("pin-cancel").textContent = entry.length ? "Hapus" : "Batal";
+}
+function clearEntry(){ entry=""; renderDots(); $("pin-msg").textContent=""; }
+function del(){ if(busy) return; entry = entry.slice(0,-1); renderDots(); }
+
+function press(d){
+  if(busy || entry.length>=LEN) return;
+  entry += d; renderDots(); buzz(8);
+  if(entry.length===LEN) check();
+}
+function check(){
+  busy = true;
+  setTimeout(()=>{
+    if(entry === CONFIG.pin.code){
+      buzz(30); lock.classList.add("unlocked"); busy = false; return;
+    }
+    wrongCount++;
+    $("dots").classList.add("shake");
+    $("pin-msg").textContent = "Kode sandi salah. Coba ingat lagi.";
+    buzz([40,40,40]);
+    const hint = [...CONFIG.pin.extraHints].reverse().find(h=>wrongCount>=h.after);
+    if(hint) $("riddle-extra").textContent = hint.text;
+    setTimeout(()=>{ $("dots").classList.remove("shake"); clearEntry(); busy=false; }, 520);
+  }, 160);
+}
+
+/* =========================================================
+   Home screen
+   ========================================================= */
+function makeApp(a){
+  const el = document.createElement("button");
+  el.className = "app" + (a.locked?" locked":"");
+  el.dataset.id = a.id;
+  el.appendChild(iconEl(a.id, 60));
+  const lab = document.createElement("span"); lab.textContent = a.name; el.appendChild(lab);
+  el.insertAdjacentHTML("beforeend",
+    `<div class="lockmark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2.5" fill="#fff"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>`);
+  if(a.badge) el.insertAdjacentHTML("beforeend", `<div class="badge">${a.badge}</div>`);
+  el.addEventListener("click", ()=>openApp(a, el));
+  return el;
+}
+CONFIG.apps.forEach(a=>$("grid").appendChild(makeApp(a)));
+CONFIG.dock.forEach(a=>{ const el = makeApp(a); el.querySelector("span").style.display="none"; $("dock").appendChild(el); });
+
+function openApp(a, el){
+  if(a.dead){ toast("Tidak tersedia."); return; }
+  if(a.locked){ toast(`${a.name} masih terkunci. Cari petunjuknya dulu.`); buzz(20); return; }
+  el.querySelector(".badge")?.remove();
+  // Langkah 3: buka aplikasi sungguhan di sini
+  toast(`${a.name} dibuka (isinya kita bangun di langkah berikutnya)`);
+}
+</script>
+</body>
+</html>
